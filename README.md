@@ -18,6 +18,8 @@
 - WorldGuard 7.0.17
 - WorldEdit: WorldGuard가 요구하는 호환 버전
 - ProtocolLib는 현재 필수가 아닙니다.
+
+플러그인은 ConfigLib와 SQLite 드라이버를 포함한 Shadow JAR로 사용해야 합니다.
 ---
 
 ## 2. 빠른 시작
@@ -101,6 +103,7 @@ farming:
 | `sheet_door` | 판금 문 |
 | `steel_door` | 강철 문 |
 | `sleeping_bag` | 침낭 |
+| `rock` | 짱돌: 모든 자원 채집 가능 |
 | `satchel` | 가방 폭탄 |
 | `c4` | C4 |
 | `rocket_launcher` | 로켓 런처 |
@@ -113,6 +116,7 @@ farming:
 /apoc give Steve wood 64
 /apoc give Steve rocket_launcher
 /apoc give Steve rocket 16
+/apoc give Steve rock
 ```
 
 아이템 제작은 별도 제작 플러그인에서 연결하면 됩니다.
@@ -140,17 +144,17 @@ farming:
 
 ## 4. 파밍지 설정 방법
 
-### 4-1. 자원 블럭 등록
+### 4-1. 자원 블럭 설정
 
-1. `config.yml`의 `farming.resources`에 자원 종류를 만듭니다.
-2. 파밍 구역 안에 실제 블럭을 설치합니다.
-3. 해당 블럭을 6블럭 이내에서 바라봅니다.
-4. 등록 명령어를 실행합니다.
+자원 블럭은 별도로 node 등록할 필요가 없습니다. `config.yml`의 `farming.resources`에 설정된 `blockMaterial`과 같은 블럭을 WorldGuard 파밍 구역 안에 설치하면 자동으로 자원으로 인식됩니다.
+
+`/apoc node resource <종류>` 명령어는 설정 재질과 다른 특수 블럭을 자원으로 강제 등록할 때만 선택적으로 사용합니다.
 
 ```text
 /apoc node resource WOOD
 /apoc node resource STONE
 /apoc node resource METAL
+/apoc node resource SULFUR
 ```
 
 기본 자원 종류는 다음과 같습니다.
@@ -158,8 +162,17 @@ farming:
 - `WOOD`: 도끼 계열 사용
 - `STONE`: 곡괭이 계열 사용
 - `METAL`: 곡괭이 계열 사용
+- `SULFUR`: 금광석으로 표시되며 곡괭이 계열 사용
 
-자원마다 필요한 타격 횟수, 리젠 시간, 드롭 아이템을 설정할 수 있습니다.
+짱돌은 `/apoc give <플레이어> rock`으로 지급합니다. 짱돌은 도끼·곡괭이 구분 없이 모든 자원을 채집할 수 있습니다.
+
+자원은 한 번 좌클릭하면 바로 채집됩니다. 드롭 아이템은 플레이어 인벤토리로 바로 들어가지 않고 채집한 블럭 위치에 떨어집니다.
+
+- 파밍 구역 밖의 일반 블럭은 자동 자원으로 인식되지 않음
+- 도구함의 15×15 집 영역과 겹치는 블럭은 채집되지 않음
+- 리젠 대기 중 집 영역과 겹친 자원은 리젠되지 않고 자원 기록도 삭제됨
+- 리젠 시간과 기본 드롭은 자원별로 설정
+- 도구별 드롭 배율은 `farming.tools.<도구>.dropMultiplier`로 설정
 
 ### 4-2. 깡통 등록
 
@@ -404,8 +417,10 @@ GUI 아이콘에 다음 정보가 표시됩니다.
 
 1. 자원에 맞는 도구를 듭니다.
 2. 자원 블럭을 좌클릭합니다.
-3. 설정된 타격 횟수를 채우면 자원이 지급됩니다.
+3. 한 번 클릭하면 도구 효율에 맞는 수량이 블럭 자리에 떨어집니다.
 4. 블럭은 사라진 뒤 설정 시간이 지나면 리젠됩니다.
+
+짱돌은 나무, 돌, 철, 유황을 모두 채집할 수 있습니다.
 
 ### 깡통
 
@@ -486,6 +501,37 @@ GUI 아이콘에 다음 정보가 표시됩니다.
 ---
 
 ## 12. 자주 수정하는 설정
+
+### 자원과 도구 효율
+
+```yaml
+farming:
+  resources:
+    SULFUR:
+      blockMaterial: GOLD_ORE
+      toolCategory: PICKAXE
+      respawnSeconds: 480
+      drops:
+        - material: RAW_GOLD
+          amount: 3
+  tools:
+    WOODEN_PICKAXE:
+      category: PICKAXE
+      cooldownMillis: 700
+      dropMultiplier: 1
+    STONE_PICKAXE:
+      category: PICKAXE
+      cooldownMillis: 550
+      dropMultiplier: 2
+    IRON_PICKAXE:
+      category: PICKAXE
+      cooldownMillis: 400
+      dropMultiplier: 3
+    ROCK:
+      category: UNIVERSAL
+      cooldownMillis: 900
+      dropMultiplier: 1
+```
 
 ### 기지와 침낭 거리
 
@@ -635,4 +681,3 @@ DB 파일은 서버 실행 중 직접 수정하지 않는 것을 권장합니다
 - [ ] 레이드 무기 피해량 확인
 - [ ] 침낭 설치 거리와 도구별 타격 수 확인
 - [ ] `config.yml`과 `apocalipse.db` 백업
-
