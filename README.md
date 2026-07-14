@@ -18,19 +18,6 @@
 - WorldGuard 7.0.17
 - WorldEdit: WorldGuard가 요구하는 호환 버전
 - ProtocolLib는 현재 필수가 아닙니다.
-
-플러그인은 ConfigLib와 SQLite 드라이버를 포함한 Shadow JAR로 사용해야 합니다.
-
-### 빌드 방법
-
-Windows PowerShell에서 프로젝트 폴더를 연 뒤 실행합니다.
-
-```powershell
-.\gradlew shadowJar
-```
-
-완성된 플러그인은 `build/libs` 폴더에 생성됩니다. `-all`이 붙지 않은 최종 JAR를 서버의 `plugins` 폴더에 넣으면 됩니다.
-
 ---
 
 ## 2. 빠른 시작
