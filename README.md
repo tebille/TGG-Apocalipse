@@ -20,6 +20,17 @@
 - ProtocolLib는 현재 필수가 아닙니다.
 
 플러그인은 ConfigLib와 SQLite 드라이버를 포함한 Shadow JAR로 사용해야 합니다.
+
+### 빌드 방법
+
+Windows PowerShell에서 프로젝트 폴더를 연 뒤 실행합니다.
+
+```powershell
+.\gradlew shadowJar
+```
+
+완성된 플러그인은 `build/libs` 폴더에 생성됩니다. `-all`이 붙지 않은 최종 JAR를 서버의 `plugins` 폴더에 넣으면 됩니다.
+
 ---
 
 ## 2. 빠른 시작
@@ -174,19 +185,23 @@ farming:
 - 리젠 시간과 기본 드롭은 자원별로 설정
 - 도구별 드롭 배율은 `farming.tools.<도구>.dropMultiplier`로 설정
 
-### 4-2. 깡통 등록
+### 4-2. 깡통 설정
 
-깡통으로 사용할 블럭을 바라보고 실행합니다.
+깡통은 node 등록이 필수가 아닙니다. 파밍 구역 안에서 `loot.canBlocks`에 등록된 블럭 재질을 좌클릭하면 자동으로 깡통으로 인식됩니다.
+
+기본 자동 깡통은 `IRON_BLOCK: COMMON`, `COPPER_BLOCK: RARE`, `GOLD_BLOCK: ELITE`입니다. 다른 재질을 강제로 지정할 때만 다음 명령어를 사용합니다.
 
 ```text
 /apoc node loot COMMON can
 ```
 
-깡통은 설정된 근접 무기로 좌클릭해야 파밍됩니다.
+깡통의 기본 체력은 20입니다. 무기나 도구별 피해량은 `loot.canDamage`에서 설정합니다. 체력이 0이 되면 보상이 깡통 위치에 떨어지고 설정 시간이 지난 뒤 리젠됩니다.
 
-### 4-3. 파밍 상자 등록
+### 4-3. 파밍 상자 설정
 
-상자로 사용할 블럭을 바라보고 실행합니다.
+상자도 node 등록이 필수가 아닙니다. 파밍 구역 안에서 `loot.crateBlocks`에 등록된 블럭을 우클릭하면 해당 등급 상자로 자동 인식됩니다.
+
+기본 자동 상자는 `CHEST: COMMON`, `TRAPPED_CHEST: RARE`, `BARREL: ELITE`입니다. 특수 블럭을 강제로 지정할 때만 다음 명령어를 사용합니다.
 
 ```text
 /apoc node loot COMMON crate
@@ -210,7 +225,9 @@ farming:
 /apoc admin loot COMMON
 ```
 
-GUI 위쪽 5줄에 보상 아이템을 넣습니다. 아이템 종류와 스택 수량이 그대로 저장됩니다. GUI를 닫으면 자동 저장됩니다.
+GUI 위쪽 5줄에 보상 아이템을 넣습니다. 확률을 바꿀 아이템을 우클릭한 뒤 아래의 `-10%`, `-1%`, `+1%`, `+10%` 버튼으로 조절합니다. 가운데 미리보기에서 현재 확률을 확인할 수 있습니다.
+
+새 아이템의 기본 확률은 100%이며 0~100% 범위에서 설정할 수 있습니다. GUI를 닫거나 관리자 패널로 돌아가면 자동 저장됩니다.
 
 상자 등급별 최소·최대 보상 추첨 횟수는 `loot.tiers`에서 설정합니다.
 
@@ -258,6 +275,8 @@ GUI를 닫으면 SQLite에 자동 저장됩니다.
 4. 결과 아이템은 출력 구역에 쌓입니다.
 5. 입력 아이템이 모두 사라지면 자동 종료됩니다.
 6. GUI를 닫으면 남은 입력·출력 아이템이 플레이어에게 반환됩니다.
+
+갈갈이가 아이템을 처리할 때마다 설치된 갈갈이 주변에 설정된 작동 소리가 재생됩니다.
 
 ---
 
@@ -424,9 +443,11 @@ GUI 아이콘에 다음 정보가 표시됩니다.
 
 ### 깡통
 
-1. 설정된 근접 무기를 듭니다.
-2. 깡통을 좌클릭합니다.
-3. 보상을 받은 뒤 깡통은 리젠 대기 상태가 됩니다.
+1. `loot.canDamage`에 등록된 무기나 도구를 듭니다.
+2. 깡통을 좌클릭해 체력 20을 깎습니다.
+3. 남은 체력은 액션바에서 확인합니다.
+4. 체력이 0이 되면 파괴음과 함께 보상이 깡통 위치에 떨어집니다.
+5. 설정 시간이 지나면 체력이 초기화되어 리젠됩니다.
 
 ### 상자
 
@@ -451,6 +472,8 @@ GUI 아이콘에 다음 정보가 표시됩니다.
 - C4를 들고 블럭 우클릭
 - 가방 폭탄보다 높은 기본 피해
 - 폭발 전 1초마다 카운트 소리 재생
+- 클릭한 블럭 면에 방향이 고정됨
+- 벽 안쪽이나 앞이 막힌 면에는 부착되지 않음
 
 ### 로켓 런처
 
@@ -532,6 +555,34 @@ farming:
       cooldownMillis: 900
       dropMultiplier: 1
 ```
+
+### 자동 깡통·상자와 깡통 피해량
+
+```yaml
+loot:
+  defaultRespawnSeconds: 300
+  canHealth: 20.0
+  canHitCooldownMillis: 200
+  canBlocks:
+    IRON_BLOCK: COMMON
+    COPPER_BLOCK: RARE
+    GOLD_BLOCK: ELITE
+  crateBlocks:
+    CHEST: COMMON
+    TRAPPED_CHEST: RARE
+    BARREL: ELITE
+  canDamage:
+    ROCK: 2.0
+    WOODEN_SWORD: 4.0
+    IRON_SWORD: 6.0
+    IRON_AXE: 7.0
+```
+
+`canBlocks`와 `crateBlocks`의 왼쪽에는 마인크래프트 블럭 재질, 오른쪽에는 관리자 GUI에서 설정한 보상 등급을 입력합니다. 같은 재질을 여러 용도로 중복 등록하지 않는 것을 권장합니다.
+
+### 주요 효과음
+
+자원 채집은 `farming.harvestSound`, 깡통과 상자는 `loot.canHitSound`, `loot.canBreakSound`, `loot.crateOpenSound`, 갈갈이는 `grinder.processSound`, 폭발물 부착은 `raid.explosivePlaceSound`에서 변경할 수 있습니다. 각 항목의 `Volume`과 `Pitch`도 함께 설정할 수 있습니다.
 
 ### 기지와 침낭 거리
 
